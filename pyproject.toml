@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reachy-mini-local-speech"
+version = "0.1.0"
+description = "A reproducible local Hugging Face speech-to-speech server for Reachy Mini"
+requires-python = ">=3.11,<3.13"
+dependencies = ["websockets>=15,<17"]
+
+[project.optional-dependencies]
+server = ["speech-to-speech==1.1.0"]
+
+[project.scripts]
+reachy-local = "reachy_local.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "ruff>=0.11,<1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+reachy_local = ["profiles/*.yaml"]
+
+[tool.uv]
+environments = ["sys_platform == 'darwin' and platform_machine == 'arm64'"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

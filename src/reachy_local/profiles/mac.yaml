@@ -1,0 +1,33 @@
+schema_version: 1
+
+runtime:
+  log_transcripts: false
+  server:
+    host: {env: REACHY_SPEECH_HOST}
+    port: {env: REACHY_SPEECH_PORT}
+
+blocks:
+  vad: {kind: vad, backend: silero}
+  stt:
+    kind: stt
+    backend: parakeet-tdt
+    settings:
+      parakeet_tdt_model_name: mlx-community/parakeet-tdt-0.6b-v3
+  llm:
+    kind: llm
+    backend: mlx-lm
+    settings:
+      model_name: mlx-community/Qwen3.5-4B-4bit
+  tts:
+    kind: tts
+    backend: qwen3
+    settings:
+      qwen3_tts_model_name: mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-6bit
+      qwen3_tts_speaker: Aiden
+
+pipelines:
+  mac:
+    num_pipelines: 1
+    options:
+      mac_optimal_settings: true
+    stages: {vad: vad, stt: stt, llm: llm, tts: tts}
