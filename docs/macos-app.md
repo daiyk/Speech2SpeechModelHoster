@@ -15,8 +15,8 @@
 
 ## Build and use
 
-For an install that receives updates, download the app ZIP from GitHub Releases
-and drag the app into Applications. Release builds include Sparkle and support
+For an install that receives updates, open the DMG from GitHub Releases,
+drag the app onto Applications, then launch it from Applications. Release builds include Sparkle and support
 **Reachy Mini Speech → Check for Updates…**. [Publishing and signing](releases.md)
 
 On an Apple Silicon developer Mac with Xcode command-line tools:

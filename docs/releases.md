@@ -1,7 +1,7 @@
 # Publishing the macOS app
 
-Each Git tag in the form `vMAJOR.MINOR.PATCH` publishes an Apple Silicon app
-ZIP and a signed Sparkle update feed. GitHub and the in-app update window both
+Each Git tag in the form `vMAJOR.MINOR.PATCH` publishes an Apple Silicon
+DMG and a signed Sparkle update feed. GitHub and the in-app update window both
 display the matching entry from [CHANGELOG.md](../CHANGELOG.md).
 
 ## Before the first tag
@@ -12,32 +12,32 @@ display the matching entry from [CHANGELOG.md](../CHANGELOG.md).
 
 ## Push a release
 
-The first desktop release is `v0.2.0`. Once the remote and secret are ready,
+The first DMG release is `v0.2.1`. Once the remote and secret are ready,
 push the branch and the local tag:
 
 ```sh
 git push -u origin main
-git push origin v0.2.0
+git push origin v0.2.1
 ```
 
-For the next release, add a heading such as `## v0.2.1 — 2026-11-26` at the top
+For the next release, add a heading such as `## v0.2.2 — 2026-11-26` at the top
 of the changelog and list the changes below it. Commit the changes, then tag
 the commit and push:
 
 ```sh
-git tag -a v0.2.1 -m "v0.2.1"
+git tag -a v0.2.2 -m "v0.2.2"
 git push origin main
-git push origin v0.2.1
+git push origin v0.2.2
 ```
 
 The tag determines the app’s bundle and display versions (`v0.2.1` becomes
-`0.2.1` in macOS). The workflow verifies the signed ZIP and feed before
+`0.2.1` in macOS). The workflow verifies the signed DMG and feed before
 publishing the draft. If a run fails, fix the repository secret or transient
 error and re-run the job from **Actions**. For changes to tagged source, use a
 new version.
 
 The app checks `releases/latest/download/appcast.xml` in this repository.
-Keep the app ZIP and `appcast.xml` on each release. To verify the first live
+Keep the DMG and `appcast.xml` on each release. To verify the first live
 update, install the first release in Applications, publish a higher version,
 then select **Check for Updates… → Install Update** in the installed app.
 Confirm the new version in **About Reachy Mini Speech**.
@@ -45,7 +45,7 @@ Confirm the new version in **About Reachy Mini Speech**.
 ## Apple signing and notarization
 
 Add these repository secrets to enable Developer ID signing, Apple notarization,
-and stapling before the ZIP is signed by Sparkle.
+and stapling before the DMG is signed by Sparkle.
 
 | Secret | Value |
 | --- | --- |

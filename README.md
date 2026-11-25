@@ -20,8 +20,9 @@ The connection settings were checked against Reachy Conversation App 1.2.0, [com
 ## macOS app
 
 On an Apple Silicon Mac running macOS 14 or later, open this repository’s
-**Releases**, download the latest `macOS-arm64.zip`, unzip it, and move
-**Reachy Mini Speech.app** into **Applications**. First launch installs a private
+**Releases**, open the latest `macOS-arm64.dmg`, and drag **Reachy Mini Speech.app**
+onto the **Applications** shortcut. Eject the disk image and open the app from
+Applications. First launch installs a private
 Python runtime and downloads the speech models. Allow at least 15 GB free.
 
 Choose **Reachy Mini Speech → Check for Updates…** for an immediate check, or
@@ -29,7 +30,8 @@ enable automatic checks when prompted. Updates preserve the downloaded models.
 If you previously installed a local development copy, install the GitHub release
 once to get the updater.
 
-To build locally, use `./macos/build.sh` for the app or
+To build locally, use `./macos/build-dmg.sh` for the disk image,
+`./macos/build.sh` for the app, or
 `./macos/build-installer.sh` for the installer.
 See the [app setup guide](docs/macos-app.md), [release instructions](docs/releases.md),
 and [changelog](CHANGELOG.md).
