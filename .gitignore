@@ -11,3 +11,7 @@ recordings/
 dist/
 build/
 .DS_Store
+
+desktop-profile.yaml
+models/
+*.p12

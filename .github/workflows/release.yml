@@ -1,0 +1,83 @@
+name: Release macOS app
+
+on:
+  push:
+    tags: ['v[0-9]*.[0-9]*.[0-9]*']
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: macos-releases
+  queue: max
+
+jobs:
+  release:
+    if: ${{ !github.event.deleted }}
+    runs-on: macos-15
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Validate release tag and changelog
+        run: python3 macos/release_notes.py --tag "$RELEASE_TAG"
+
+      - name: Fetch verified Sparkle distribution
+        run: |
+          ./macos/fetch-sparkle.sh "$RUNNER_TEMP/sparkle"
+          echo "SPARKLE_DIR=$RUNNER_TEMP/sparkle" >> "$GITHUB_ENV"
+
+      - name: Configure optional Apple signing
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [[ -z "$CERTIFICATE" && -z "$CERT_PASSWORD" ]]; then exit 0; fi
+          : "${CERTIFICATE:?Set APPLE_CERTIFICATE_P12}"
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password=$(openssl rand -hex 32)
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 7200 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$CERTIFICATE" | base64 -D > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" >/dev/null
+          security list-keychains -d user -s "$keychain" "$HOME/Library/Keychains/login.keychain-db"
+          identity=$(security find-identity -v -p codesigning "$keychain" | awk '/"Developer ID Application:/ {print $2; exit}')
+          : "${identity:?No valid Developer ID Application identity in the certificate}"
+          echo "CODE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+
+      - name: Package app, sign updates, and verify signatures
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: ./macos/package-release.sh
+
+      - name: Publish the app and update feed together
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          out="dist/releases/$RELEASE_TAG"
+          if draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft); then
+            if [[ "$draft" == false ]]; then echo "$RELEASE_TAG is already published"; exit 0; fi
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --notes-file "$out/release-notes.md"
+          fi
+          gh release upload "$RELEASE_TAG" "$out"/*.zip "$out/appcast.xml" --clobber
+          latest=true
+          published=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[].tagName')
+          if [[ -n "$published" ]]; then
+            current=$(gh release view --json tagName --jq .tagName)
+            newest=$(printf '%s\n' "$current" "$RELEASE_TAG" | sort -V | tail -1)
+            if [[ "$newest" != "$RELEASE_TAG" ]]; then latest=false; fi
+          fi
+          gh release edit "$RELEASE_TAG" --title "$RELEASE_TAG" --notes-file "$out/release-notes.md" --draft=false --latest="$latest"

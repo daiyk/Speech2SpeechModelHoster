@@ -17,7 +17,24 @@ The pipeline comes from [Hugging Face speech-to-speech](https://github.com/huggi
 
 The connection settings were checked against Reachy Conversation App 1.2.0, [commit `e901925`](https://github.com/pollen-robotics/reachy_mini_conversation_app/tree/e90192559149d6281d782c1c4aed39bb7d84bdef), on 2026-11-04. Physical robot validation is a separate step.
 
-## Set up once
+## macOS app
+
+On an Apple Silicon Mac running macOS 14 or later, open this repository’s
+**Releases**, download the latest `macOS-arm64.zip`, unzip it, and move
+**Reachy Mini Speech.app** into **Applications**. First launch installs a private
+Python runtime and downloads the speech models. Allow at least 15 GB free.
+
+Choose **Reachy Mini Speech → Check for Updates…** for an immediate check, or
+enable automatic checks when prompted. Updates preserve the downloaded models.
+If you previously installed a local development copy, install the GitHub release
+once to get the updater.
+
+To build locally, use `./macos/build.sh` for the app or
+`./macos/build-installer.sh` for the installer.
+See the [app setup guide](docs/macos-app.md), [release instructions](docs/releases.md),
+and [changelog](CHANGELOG.md).
+
+## Set up once (terminal workflow)
 
 Use an Apple Silicon Mac and install [uv](https://docs.astral.sh/uv/getting-started/installation/) first. This repository targets macOS; it does not provide a tested CUDA or Windows setup.
 
