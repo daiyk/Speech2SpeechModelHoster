@@ -18,7 +18,7 @@ pkgbuild --root "$work/root" --component-plist "$work/components.plist" \
 cat > "$work/resources/welcome.html" <<'HTML'
 <html><body style="font-family:-apple-system;font-size:14px;color:#222">
 <h1>Reachy Mini Speech</h1>
-<p>A local speech server for your Reachy Mini.</p>
+<p>Speech2SpeechModelHoster runs the speech models on this Mac for the Reachy Mini Conversation App.</p>
 <p>This installer places Reachy Mini Speech in your Applications folder.</p>
 <ul><li>Apple Silicon Mac, macOS 14 or later</li>
 <li>At least 16 GB memory recommended</li>

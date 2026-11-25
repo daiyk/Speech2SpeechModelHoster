@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2 — 2026-11-25
+
+- The app and installer now identify the project as Speech2SpeechModelHoster. Look for **Reachy Mini Speech** in Applications.
+- The setup guide links to the project's GitHub releases and explains how to open the DMG on first launch.
+
 ## v0.2.1 — 2026-11-25
 
 - Open the DMG and drag Reachy Mini Speech onto the Applications shortcut to install it. Existing release installations receive the same disk image through the in-app updater.

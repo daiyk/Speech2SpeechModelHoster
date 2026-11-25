@@ -1,8 +1,8 @@
-# Reachy Mini Local Speech
+# Speech2SpeechModelHoster
 
-Run the official Hugging Face speech-to-speech backend on an Apple Silicon Mac and point the Reachy Mini Conversation App at it.
+Host speech recognition, language generation, and speech synthesis on an Apple Silicon Mac. The Reachy Mini Conversation App connects to the Mac over a Realtime WebSocket, sends microphone audio, and plays the spoken response.
 
-This repository packages setup, launchers, configuration, and diagnostics around **`speech-to-speech==1.1.0`**. The upstream server handles the Realtime protocol, audio streaming, interruptions, conversation state, and tool calls. There is no separate protocol adapter to maintain.
+Use **Reachy Mini Speech**, the macOS app included in Speech2SpeechModelHoster, or run the same backend from the terminal. Both use **`speech-to-speech==1.1.0`** for audio streaming, interruptions, conversation state, and tool calls.
 
 ```text
 Reachy Mini Conversation App
@@ -19,11 +19,11 @@ The connection settings were checked against Reachy Conversation App 1.2.0, [com
 
 ## macOS app
 
-On an Apple Silicon Mac running macOS 14 or later, open this repository’s
-**Releases**, open the latest `macOS-arm64.dmg`, and drag **Reachy Mini Speech.app**
-onto the **Applications** shortcut. Eject the disk image and open the app from
-Applications. First launch installs a private
-Python runtime and downloads the speech models. Allow at least 15 GB free.
+1. On an Apple Silicon Mac running macOS 14 or later, download the DMG ending in `macOS-arm64.dmg` from [Speech2SpeechModelHoster releases](https://github.com/daiyk/Speech2SpeechModelHoster/releases).
+2. Open the DMG, drag **Reachy Mini Speech.app** onto **Applications**, eject the disk image, and open the app from Applications.
+3. Allow at least 15 GB free for the first-launch Python and model downloads. Once setup finishes, choose **Start server**.
+
+This project distributes an ad-hoc-signed app without Apple notarization. If macOS blocks the first launch because it cannot verify the developer, and you trust the download, choose **System Settings → Privacy & Security → Open Anyway** after the first launch attempt. [Apple’s first-launch instructions](https://support.apple.com/en-us/102445)
 
 Choose **Reachy Mini Speech → Check for Updates…** for an immediate check, or
 enable automatic checks when prompted. Updates preserve the downloaded models.
@@ -41,7 +41,8 @@ and [changelog](CHANGELOG.md).
 Use an Apple Silicon Mac and install [uv](https://docs.astral.sh/uv/getting-started/installation/) first. This repository targets macOS; it does not provide a tested CUDA or Windows setup.
 
 ```bash
-cd ~/Documents/Repos/ReachyMiniLocalSpeech
+git clone https://github.com/daiyk/Speech2SpeechModelHoster.git
+cd Speech2SpeechModelHoster
 ./scripts/setup.sh
 ```
 

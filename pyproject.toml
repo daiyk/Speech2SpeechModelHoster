@@ -5,9 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "reachy-mini-local-speech"
 version = "0.1.0"
-description = "A reproducible local Hugging Face speech-to-speech server for Reachy Mini"
+description = "Host the Hugging Face speech-to-speech pipeline on an Apple Silicon Mac for Reachy Mini"
 requires-python = ">=3.11,<3.13"
 dependencies = ["websockets>=15,<17"]
+
+[project.urls]
+Repository = "https://github.com/daiyk/Speech2SpeechModelHoster"
+Releases = "https://github.com/daiyk/Speech2SpeechModelHoster/releases"
 
 [project.optional-dependencies]
 server = ["speech-to-speech==1.1.0"]

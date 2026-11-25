@@ -189,8 +189,9 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Speech studio").font(.largeTitle.bold())
-                        Text("Local voices. Natural conversations.").foregroundStyle(.secondary)
+                        Text("Speech2SpeechModelHoster").font(.largeTitle.bold())
+                        Text("Host the speech models on this Mac and connect the Reachy Mini Conversation App.")
+                            .foregroundStyle(.secondary)
                     }
                     Spacer()
                     HStack(spacing: 7) {

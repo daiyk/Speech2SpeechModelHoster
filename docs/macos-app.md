@@ -1,4 +1,6 @@
-# macOS app
+# Speech2SpeechModelHoster on macOS
+
+The desktop app appears in Finder as **Reachy Mini Speech.app**. It hosts the speech models on your Mac and displays the address to enter in the Reachy Mini Conversation App.
 
 ## Implementation plan and result
 
@@ -15,9 +17,9 @@
 
 ## Build and use
 
-For an install that receives updates, open the DMG from GitHub Releases,
-drag the app onto Applications, then launch it from Applications. Release builds include Sparkle and support
-**Reachy Mini Speech → Check for Updates…**. [Publishing and signing](releases.md)
+For an install that receives updates, download the DMG, drag the app onto
+Applications, and launch it from Applications. Choose **Reachy Mini Speech →
+Check for Updates…** for later releases. [Download from Speech2SpeechModelHoster](https://github.com/daiyk/Speech2SpeechModelHoster/releases)
 
 On an Apple Silicon developer Mac with Xcode command-line tools:
 
@@ -90,11 +92,8 @@ model weights and are not revision-pinned. Internet tools are not enabled.
   the installed app environment loaded the full pipeline successfully.
 
 The app uses an in-process hook around upstream 1.1.0's ASGI app factory and
-Silero loader. Keep integration tests when updating upstream. This build is
-ad-hoc signed, not Developer ID signed or notarized; a downloaded copy may be
-blocked by Gatekeeper. Public distribution requires the owner's signing identity
-and notarization. A new physical Mac, physical Reachy, LAN/firewall behavior,
-and sustained sessions remain to be tested.
+Silero loader. Keep integration tests when updating upstream. A new physical Mac,
+physical Reachy, LAN/firewall behavior, and sustained sessions remain to be tested.
 
 ## Icon and interface update
 
@@ -133,9 +132,9 @@ Quit the running app before installing an update.
 
 The package has no install-time scripts or downloads. Open the installed app to
 perform first-launch runtime/model setup as the logged-in user. Existing user
-model caches and settings are preserved. This package is unsigned and the app is
-ad-hoc signed; Developer ID signing/notarization remains necessary for frictionless
-external distribution. Gatekeeper may block downloaded copies.
+model caches and settings are preserved. This local package is unsigned and the
+app is ad-hoc signed. For the public DMG and first-launch instructions, see the
+[installation guide](../README.md#macos-app).
 
 Validation: expanded the product package, checked its Applications payload and
 non-relocatable upgrade metadata, verified the extracted app's signature, and
