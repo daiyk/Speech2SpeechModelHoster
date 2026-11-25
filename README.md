@@ -2,7 +2,7 @@
 
 Host speech recognition, language generation, and speech synthesis on an Apple Silicon Mac. The Reachy Mini Conversation App connects to the Mac over a Realtime WebSocket, sends microphone audio, and plays the spoken response.
 
-Use **Reachy Mini Speech**, the macOS app included in Speech2SpeechModelHoster, or run the same backend from the terminal. Both use **`speech-to-speech==1.1.0`** for audio streaming, interruptions, conversation state, and tool calls.
+Start the server from the macOS app or from the terminal. Both use **`speech-to-speech==1.1.0`** for audio streaming, interruptions, conversation state, and tool calls.
 
 ```text
 Reachy Mini Conversation App
@@ -19,13 +19,13 @@ The connection settings were checked against Reachy Conversation App 1.2.0, [com
 
 ## macOS app
 
-1. On an Apple Silicon Mac running macOS 14 or later, download the DMG ending in `macOS-arm64.dmg` from [Speech2SpeechModelHoster releases](https://github.com/daiyk/Speech2SpeechModelHoster/releases).
-2. Open the DMG, drag **Reachy Mini Speech.app** onto **Applications**, eject the disk image, and open the app from Applications.
+1. On an Apple Silicon Mac running macOS 14 or later, download the latest `Speech2SpeechModelHoster-vX.Y.Z-macOS-arm64.dmg` from [Speech2SpeechModelHoster releases](https://github.com/daiyk/Speech2SpeechModelHoster/releases).
+2. Open the DMG, drag **Speech2SpeechModelHoster.app** onto **Applications**, eject the disk image, and open the app from Applications.
 3. Allow at least 15 GB free for the first-launch Python and model downloads. Once setup finishes, choose **Start server**.
 
 This project distributes an ad-hoc-signed app without Apple notarization. If macOS blocks the first launch because it cannot verify the developer, and you trust the download, choose **System Settings → Privacy & Security → Open Anyway** after the first launch attempt. [Apple’s first-launch instructions](https://support.apple.com/en-us/102445)
 
-Choose **Reachy Mini Speech → Check for Updates…** for an immediate check, or
+Choose **Speech2SpeechModelHoster → Check for Updates…** for an immediate check, or
 enable automatic checks when prompted. Updates preserve the downloaded models.
 If you previously installed a local development copy, install the GitHub release
 once to get the updater.

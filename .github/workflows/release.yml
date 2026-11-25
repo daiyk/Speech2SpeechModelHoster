@@ -72,7 +72,7 @@ jobs:
           else
             gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --notes-file "$out/release-notes.md"
           fi
-          gh release upload "$RELEASE_TAG" "$out/Reachy-Mini-Speech-$RELEASE_TAG-macOS-arm64.dmg" "$out/appcast.xml" --clobber
+          gh release upload "$RELEASE_TAG" "$out/Speech2SpeechModelHoster-$RELEASE_TAG-macOS-arm64.dmg" "$out/appcast.xml" --clobber
           latest=true
           published=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[].tagName')
           if [[ -n "$published" ]]; then

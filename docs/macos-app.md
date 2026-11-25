@@ -1,6 +1,6 @@
 # Speech2SpeechModelHoster on macOS
 
-The desktop app appears in Finder as **Reachy Mini Speech.app**. It hosts the speech models on your Mac and displays the address to enter in the Reachy Mini Conversation App.
+The desktop app appears in Finder as **Speech2SpeechModelHoster.app**. It hosts the speech models on your Mac and displays the address to enter in the Reachy Mini Conversation App.
 
 ## Implementation plan and result
 
@@ -18,14 +18,14 @@ The desktop app appears in Finder as **Reachy Mini Speech.app**. It hosts the sp
 ## Build and use
 
 For an install that receives updates, download the DMG, drag the app onto
-Applications, and launch it from Applications. Choose **Reachy Mini Speech →
+Applications, and launch it from Applications. Choose **Speech2SpeechModelHoster →
 Check for Updates…** for later releases. [Download from Speech2SpeechModelHoster](https://github.com/daiyk/Speech2SpeechModelHoster/releases)
 
 On an Apple Silicon developer Mac with Xcode command-line tools:
 
 ```sh
 ./macos/build.sh
-open "dist/Reachy Mini Speech.app"
+open "dist/Speech2SpeechModelHoster.app"
 ```
 
 Copy the built app to Applications on another Apple Silicon Mac. The recipient
@@ -45,7 +45,7 @@ Reachy's connection settings. LAN service has no authentication. The client list
 shows accepted sockets, not device identities; the upstream pipeline supports one
 conversation at a time. Rejected connections are not counted.
 
-Runtime files live in `~/Library/Application Support/Reachy Mini Speech/`:
+Runtime files live in `~/Library/Application Support/Speech2SpeechModelHoster/`:
 private uv, Python, virtual environment, bundled source copy, model aliases and
 caches. Nothing is installed into Homebrew or shell profiles. Moving the app
 preserves this data. `REACHY_APP_HOME` overrides this directory for testing.
@@ -115,7 +115,7 @@ URLs passed. Visual review verified the icon, final layout, setup cancellation,
 and actual LAN addresses. The Swift checks can be run with:
 
 ```sh
-xcrun swiftc -parse-as-library -D MODEL_TEST macos/ReachySpeech.swift \
+xcrun swiftc -parse-as-library -D MODEL_TEST macos/Speech2SpeechModelHoster.swift \
   tests/macos_model.swift -o /tmp/reachy-model-checks \
   -target arm64-apple-macos14.0 -framework SwiftUI -framework AppKit
 /tmp/reachy-model-checks
@@ -124,7 +124,7 @@ xcrun swiftc -parse-as-library -D MODEL_TEST macos/ReachySpeech.swift \
 ## Installer
 
 Build the native macOS installer with `./macos/build-installer.sh`. This rebuilds
-the app and creates `dist/Reachy Mini Speech Installer.pkg` (about 3.6 MB).
+the app and creates `dist/Speech2SpeechModelHoster Installer.pkg` (about 3.6 MB).
 Double-click the package and follow Installer. It requires administrator
 authorization to install into `/Applications`, targets Apple Silicon and macOS
 14+, and never relocates installation to a development copy elsewhere.

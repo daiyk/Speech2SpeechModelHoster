@@ -11,7 +11,7 @@ assets="$work/assets"
 mkdir -p "$assets"
 public_key=$(printf '%s\n' "$SPARKLE_PRIVATE_KEY" | xcrun swift \
   -module-cache-path "${TMPDIR:-/tmp}/reachy-swift-cache" macos/sparkle-public-key.swift)
-name="Reachy-Mini-Speech-$RELEASE_TAG-macOS-arm64"
+name="Speech2SpeechModelHoster-$RELEASE_TAG-macOS-arm64"
 dmg="$assets/$name.dmg"
 SPARKLE_PUBLIC_KEY="$public_key" ./macos/build-dmg.sh "$dmg"
 if [[ -n ${CODE_SIGN_IDENTITY:-} ]]; then

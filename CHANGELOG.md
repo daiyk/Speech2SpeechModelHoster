@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.3 — 2026-11-25
+
+- Install **Speech2SpeechModelHoster.app** from the newly named DMG. The app now uses its own Application Support folder and downloads its runtime and models on first launch.
+
 ## v0.2.2 — 2026-11-25
 
 - The app and installer now identify the project as Speech2SpeechModelHoster. Look for **Reachy Mini Speech** in Applications.

@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=${BUILD_DIR:-"$PWD/dist"}
-app="$out/Reachy Mini Speech.app"
+app="$out/Speech2SpeechModelHoster.app"
 version_args=(--version-only)
 if [[ -n ${RELEASE_TAG:-} ]]; then version_args+=(--tag "$RELEASE_TAG"); fi
 version=$(python3 macos/release_notes.py "${version_args[@]}")
@@ -27,7 +27,7 @@ if [[ -n ${SPARKLE_DIR:-} ]]; then
   swift_flags+=(-D SPARKLE_UPDATES -F "$SPARKLE_DIR" -framework Sparkle
     -Xlinker -rpath -Xlinker '@executable_path/../Frameworks')
 fi
-xcrun swiftc -parse-as-library macos/ReachySpeech.swift -o "$app/Contents/MacOS/ReachySpeech" \
+xcrun swiftc -parse-as-library macos/Speech2SpeechModelHoster.swift -o "$app/Contents/MacOS/Speech2SpeechModelHoster" \
   -target arm64-apple-macos14.0 -module-cache-path "${TMPDIR:-/tmp}/reachy-swift-cache" "${swift_flags[@]}"
 iconset="$out/AppIcon.iconset"
 mkdir -p "$iconset"
@@ -46,9 +46,10 @@ cat > "$plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>CFBundleExecutable</key><string>ReachySpeech</string>
-<key>CFBundleIdentifier</key><string>local.reachy.speech</string>
-<key>CFBundleName</key><string>Reachy Mini Speech</string>
+<key>CFBundleExecutable</key><string>Speech2SpeechModelHoster</string>
+<key>CFBundleIdentifier</key><string>io.github.daiyk.Speech2SpeechModelHoster</string>
+<key>CFBundleName</key><string>Speech2SpeechModelHoster</string>
+<key>CFBundleDisplayName</key><string>Speech2SpeechModelHoster</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleVersion</key><string>$version</string>

@@ -2,7 +2,7 @@
 set -euo pipefail
 resources="$1"
 shift
-support="${REACHY_APP_HOME:-$HOME/Library/Application Support/Reachy Mini Speech}"
+support="${REACHY_APP_HOME:-$HOME/Library/Application Support/Speech2SpeechModelHoster}"
 mkdir -p "$support"
 cd "$support"
 export UV_CACHE_DIR="$support/cache/uv"

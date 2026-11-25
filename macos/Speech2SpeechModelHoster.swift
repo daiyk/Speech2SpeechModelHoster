@@ -254,8 +254,8 @@ struct ContentView: View {
                     Image(nsImage: image).resizable().scaledToFit().frame(width: 48, height: 48)
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Reachy Mini").font(.headline)
-                    Text("LOCAL SPEECH").font(.system(size: 10, weight: .semibold, design: .rounded))
+                    Text("Speech2Speech").font(.headline)
+                    Text("MODEL HOSTER").font(.system(size: 10, weight: .semibold, design: .rounded))
                         .tracking(1.8).foregroundStyle(.secondary)
                 }
             }
@@ -391,7 +391,7 @@ private final class AppUpdates: ObservableObject {
 #endif
 
 @main
-struct ReachySpeechApp: App {
+struct Speech2SpeechModelHosterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var model = ServerModel()
     #if SPARKLE_UPDATES
@@ -412,11 +412,11 @@ struct ReachySpeechApp: App {
         #endif
     }
     var body: some Scene {
-        Window("Reachy Mini Speech", id: "main") {
+        Window("Speech2SpeechModelHoster", id: "main") {
             ContentView(model: model).onAppear {
                 delegate.model = model
                 // Prepare on first launch; listening still requires Start.
-                let home = ProcessInfo.processInfo.environment["REACHY_APP_HOME"] ?? (NSHomeDirectory() + "/Library/Application Support/Reachy Mini Speech")
+                let home = ProcessInfo.processInfo.environment["REACHY_APP_HOME"] ?? (NSHomeDirectory() + "/Library/Application Support/Speech2SpeechModelHoster")
                 if !FileManager.default.fileExists(atPath: home + "/desktop-profile.yaml") {
                     model.start(prepareOnly: true)
                 }
