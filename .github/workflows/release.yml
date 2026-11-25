@@ -105,7 +105,12 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-        run: ./macos/package-release.sh
+        run: |
+          if [[ -z "$SPARKLE_PRIVATE_KEY" ]]; then
+            echo "::error::Missing SPARKLE_PRIVATE_KEY. Add this repository Actions secret in Settings, then re-run the failed job."
+            exit 1
+          fi
+          ./macos/package-release.sh
 
       - name: Publish the app and update feed together
         env:
