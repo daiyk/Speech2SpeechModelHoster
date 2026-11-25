@@ -40,6 +40,18 @@ publishing the draft. If a run fails, fix the repository secret or transient
 error and re-run the job from **Actions**. For changes to tagged source, use a
 new version.
 
+## Build an existing tag
+
+Open **Actions → Release macOS app → Run workflow**, select **main**, and click
+**Run workflow**. It builds the commit at the highest stable version tag (for
+example, `v0.10.0` is newer than `v0.9.0`). [Release workflow](https://github.com/daiyk/Speech2SpeechModelHoster/actions/workflows/release.yml)
+
+Push each new release tag individually. GitHub skips tag events when a single
+push includes more than three tags. Updating the release workflow on `main` also
+starts a build if the newest tag is still unpublished. [GitHub push events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#push)
+
+## Verify a published update
+
 After publication, the app checks
 `https://github.com/daiyk/Speech2SpeechModelHoster/releases/latest/download/appcast.xml`.
 Keep the DMG and `appcast.xml` on each release. To verify the first live

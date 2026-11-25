@@ -1,7 +1,10 @@
 name: Release macOS app
 
 on:
+  workflow_dispatch:
   push:
+    branches: [main]
+    paths: ['.github/workflows/release.yml']
     tags: ['v[0-9]*.[0-9]*.[0-9]*']
 
 permissions:
@@ -16,14 +19,56 @@ concurrency:
   queue: max
 
 jobs:
-  release:
+  select-tag:
     if: ${{ !github.event.deleted }}
-    runs-on: macos-15
-    env:
-      RELEASE_TAG: ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.select.outputs.tag }}
+      commit: ${{ steps.select.outputs.commit }}
     steps:
       - uses: actions/checkout@v6
         with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select tagged source
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag ]]; then
+            tag="$GITHUB_REF_NAME"
+            commit=$(git rev-parse --verify "${GITHUB_SHA}^{commit}")
+          else
+            tag=$(git tag --sort=-version:refname --list 'v*' |
+              awk '/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/ && !found { print; found=1 }')
+            if [[ -z "$tag" ]]; then
+              echo "No vMAJOR.MINOR.PATCH tag is available."
+              if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then exit 1; fi
+              exit 0
+            fi
+            if [[ "$GITHUB_EVENT_NAME" == push ]] &&
+               [[ "$(gh release view "$tag" --json isDraft --jq .isDraft)" == false ]]; then
+              echo "$tag is already published."
+              exit 0
+            fi
+            commit=$(git rev-parse --verify "refs/tags/${tag}^{commit}")
+          fi
+          echo "Building $tag at $commit"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: select-tag
+    if: needs.select-tag.outputs.tag != ''
+    runs-on: macos-15
+    env:
+      RELEASE_TAG: ${{ needs.select-tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.select-tag.outputs.commit }}
           persist-credentials: false
 
       - name: Validate release tag and changelog
