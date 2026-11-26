@@ -5,12 +5,12 @@ cd "$(dirname "$0")/.."
 : "${RELEASE_TAG:?Missing release tag}" "${GITHUB_REPOSITORY:?Missing GitHub owner/repository}"
 : "${SPARKLE_DIR:?Run fetch-sparkle.sh first}" "${SPARKLE_PRIVATE_KEY:?Set the SPARKLE_PRIVATE_KEY Actions secret}"
 notes=$(python3 macos/release_notes.py --tag "$RELEASE_TAG")
-work=$(mktemp -d "${TMPDIR:-/tmp}/reachy-release.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/speech-release.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 assets="$work/assets"
 mkdir -p "$assets"
 public_key=$(printf '%s\n' "$SPARKLE_PRIVATE_KEY" | xcrun swift \
-  -module-cache-path "${TMPDIR:-/tmp}/reachy-swift-cache" macos/sparkle-public-key.swift)
+  -module-cache-path "${TMPDIR:-/tmp}/speech-swift-cache" macos/sparkle-public-key.swift)
 name="Speech2SpeechModelHoster-$RELEASE_TAG-macOS-arm64"
 dmg="$assets/$name.dmg"
 SPARKLE_PUBLIC_KEY="$public_key" ./macos/build-dmg.sh "$dmg"

@@ -3,9 +3,9 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "reachy-mini-local-speech"
+name = "speech2speech-model-hoster"
 version = "0.1.0"
-description = "Host the Hugging Face speech-to-speech pipeline on an Apple Silicon Mac for Reachy Mini"
+description = "Host the Hugging Face speech-to-speech pipeline on an Apple Silicon Mac"
 requires-python = ">=3.11,<3.13"
 dependencies = ["websockets>=15,<17"]
 
@@ -17,7 +17,8 @@ Releases = "https://github.com/daiyk/Speech2SpeechModelHoster/releases"
 server = ["speech-to-speech==1.1.0"]
 
 [project.scripts]
-reachy-local = "reachy_local.cli:main"
+speech-hoster = "speech_hoster.cli:main"
+reachy-local = "speech_hoster.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "ruff>=0.11,<1"]
@@ -26,7 +27,7 @@ dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "ruff>=0.11,<1"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-reachy_local = ["profiles/*.yaml"]
+speech_hoster = ["profiles/*.yaml"]
 
 [tool.uv]
 environments = ["sys_platform == 'darwin' and platform_machine == 'arm64'"]

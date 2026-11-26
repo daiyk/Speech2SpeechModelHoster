@@ -12,5 +12,5 @@ if [[ "$(uname -s)" != Darwin || "$(uname -m)" != arm64 ]]; then
 fi
 export UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.cache/uv}"
 uv sync --locked --extra server
-.venv/bin/reachy-local doctor
+.venv/bin/speech-hoster doctor
 echo "Setup complete. Start with ./scripts/serve.sh (models download on first start)."

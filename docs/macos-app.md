@@ -1,6 +1,6 @@
 # Speech2SpeechModelHoster on macOS
 
-The desktop app appears in Finder as **Speech2SpeechModelHoster.app**. It hosts the speech models on your Mac and displays the address to enter in the Reachy Mini Conversation App.
+The desktop app appears in Finder as **Speech2SpeechModelHoster.app**. It hosts the speech models on your Mac and displays the address to enter in a Realtime client.
 
 ## Implementation plan and result
 
@@ -35,30 +35,29 @@ on the target Mac. Plan for at least 16 GB RAM and 15 GB free disk space.
 
 The first launch prepares the environment and default model snapshots. Press
 **Start server** to load the models and listen on port 8765. Watch for **Running**
-before connecting Reachy. Further VAD/NLTK resources may download at first Start.
+before connecting a client. Further VAD/NLTK resources may download at first Start.
 Setup/download failures appear in the log; Start retries the operation. Stop
 cancels setup or inference. Closing the last window or quitting stops the worker
 and its process group; Stop allows five seconds before forced termination.
 
 Local mode binds 127.0.0.1. LAN mode binds 0.0.0.0; enter the Mac's LAN address in
-Reachy's connection settings. LAN service has no authentication. The client list
+your client’s connection settings. LAN service has no authentication. The client list
 shows accepted sockets, not device identities; the upstream pipeline supports one
 conversation at a time. Rejected connections are not counted.
 
 Runtime files live in `~/Library/Application Support/Speech2SpeechModelHoster/`:
 private uv, Python, virtual environment, bundled source copy, model aliases and
 caches. Nothing is installed into Homebrew or shell profiles. Moving the app
-preserves this data. `REACHY_APP_HOME` overrides this directory for testing.
+preserves this data. `SPEECH_HOSTER_HOME` overrides this directory for testing.
 
 Logs include conversation text and requests in a bounded in-memory UI buffer;
 the app does not persist them. Clear removes the displayed log and current
 activity. Audio payloads are omitted. Upstream operational diagnostics are shown
-alongside protocol events. This app has no microphone client; Reachy supplies
-audio through the existing Realtime endpoint.
+alongside protocol events. Microphone clients supply audio through the Realtime endpoint.
 
 ## Model lock
 
-The desktop model lock is in `src/reachy_local/desktop.py`:
+The desktop model lock is in `src/speech_hoster/desktop.py`:
 
 | Component | Revision |
 | --- | --- |
@@ -93,12 +92,12 @@ model weights and are not revision-pinned. Internet tools are not enabled.
 
 The app uses an in-process hook around upstream 1.1.0's ASGI app factory and
 Silero loader. Keep integration tests when updating upstream. A new physical Mac,
-physical Reachy, LAN/firewall behavior, and sustained sessions remain to be tested.
+client audio hardware, LAN/firewall behavior, and sustained sessions remain to be tested.
 
 ## Icon and interface update
 
-The generated robot-and-waveform icon is stored in `macos/Assets/AppIcon.png`.
-Its prompt and provenance are in `macos/Assets/README.md`. The build produces
+The app icon is stored in `macos/Assets/AppIcon.png`.
+Its provenance and build details are in `macos/Assets/README.md`. The build produces
 all macOS icon sizes and embeds both the ICNS Finder/Dock icon and the PNG used
 in the sidebar.
 
@@ -115,10 +114,10 @@ URLs passed. Visual review verified the icon, final layout, setup cancellation,
 and actual LAN addresses. The Swift checks can be run with:
 
 ```sh
-xcrun swiftc -parse-as-library -D MODEL_TEST macos/Speech2SpeechModelHoster.swift \
-  tests/macos_model.swift -o /tmp/reachy-model-checks \
+xcrun swiftc -parse-as-library -D MODEL_TEST macos/Voices.swift macos/Speech2SpeechModelHoster.swift \
+  tests/macos_model.swift -o /tmp/speech-model-checks \
   -target arm64-apple-macos14.0 -framework SwiftUI -framework AppKit
-/tmp/reachy-model-checks
+/tmp/speech-model-checks
 ```
 
 ## Installer

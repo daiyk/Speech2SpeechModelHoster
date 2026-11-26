@@ -830,7 +830,7 @@ wheels = [
 ]
 
 [[package]]
-name = "reachy-mini-local-speech"
+name = "speech2speech-model-hoster"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

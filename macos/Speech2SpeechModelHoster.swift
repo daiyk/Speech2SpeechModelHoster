@@ -60,7 +60,7 @@ final class ServerModel: ObservableObject {
             || kind == "response.output_audio_transcript.done" || kind == "response.text.done"
             || kind == "response.output_text.done"
         if (user || assistant) && !content.isEmpty {
-            messages.append(ConversationEntry(role: user ? "You" : "Reachy", text: content))
+            messages.append(ConversationEntry(role: user ? "You" : "Assistant", text: content))
             if messages.count > 200 { messages.removeFirst(messages.count - 200) }
         }
         switch kind {
@@ -86,8 +86,9 @@ final class ServerModel: ObservableObject {
         while let end = pending.firstIndex(of: 10) {
             let line = String(decoding: pending[..<end], as: UTF8.self)
             pending.removeSubrange(...end)
-            if line.hasPrefix("REACHY_EVENT "),
-               let json = line.dropFirst(13).data(using: .utf8),
+            let eventPrefix = "SPEECH_EVENT "
+            if line.hasPrefix(eventPrefix),
+               let json = line.dropFirst(eventPrefix.count).data(using: .utf8),
                let event = try? JSONSerialization.jsonObject(with: json) as? [String: String] {
                 let id = event["id"] ?? ""
                 switch event["kind"] {
@@ -173,6 +174,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 struct ContentView: View {
     @ObservedObject var model: ServerModel
+    @StateObject private var voiceStudio = VoiceStudio()
     @State private var tab = "Conversation"
     @State private var search = ""
     @State private var follow = true
@@ -190,7 +192,7 @@ struct ContentView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Speech2SpeechModelHoster").font(.largeTitle.bold())
-                        Text("Host the speech models on this Mac and connect the Reachy Mini Conversation App.")
+                        Text("Host the speech models on this Mac and connect a Realtime client.")
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -226,18 +228,22 @@ struct ContentView: View {
                 HStack {
                     Picker("View", selection: $tab) {
                         Text("Conversation").tag("Conversation")
+                        Text("Voices").tag("Voices")
                         Text("Diagnostics").tag("Diagnostics")
-                    }.pickerStyle(.segmented).labelsHidden().frame(width: 260)
+                    }.pickerStyle(.segmented).labelsHidden().frame(width: 315)
                     Spacer()
-                    Toggle("Follow latest", isOn: $follow).toggleStyle(.checkbox).font(.caption)
-                    Button("Clear", systemImage: "trash") {
-                        if tab == "Conversation" { model.messages.removeAll() } else { model.logs = "" }
-                    }.help("Clear the current view")
+                    if tab != "Voices" {
+                        Toggle("Follow latest", isOn: $follow).toggleStyle(.checkbox).font(.caption)
+                        Button("Clear", systemImage: "trash") {
+                            if tab == "Conversation" { model.messages.removeAll() } else { model.logs = "" }
+                        }.help("Clear the current view")
+                    }
                 }
-                if tab == "Conversation" { conversation } else { diagnostics }
+                if tab == "Voices" { VoicesView(studio: voiceStudio, online: model.status == "Running") }
+                else if tab == "Conversation" { conversation } else { diagnostics }
                 HStack(spacing: 6) {
                     Image(systemName: "lock.shield")
-                    Text("Processed on this Mac · History stays in memory")
+                    Text("Processed on this Mac · Conversation history stays in memory")
                     Spacer()
                     Text("One conversation at a time")
                 }.font(.caption).foregroundStyle(.secondary)
@@ -271,7 +277,7 @@ struct ContentView: View {
                     Text("This Mac").tag(false)
                     Text("Local network").tag(true)
                 }.pickerStyle(.segmented).labelsHidden().disabled(model.running)
-                Text(model.lan ? "Connect Reachy Wireless on the same trusted network." : "For a conversation app running on this Mac.")
+                Text(model.lan ? "Connect clients on the same trusted network." : "For a conversation app running on this Mac.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 if model.lan && model.addresses.count > 1 {
                     Picker("Mac address", selection: $model.selectedAddress) {
@@ -334,7 +340,7 @@ struct ContentView: View {
                     VStack(spacing: 14) {
                         Image(systemName: "bubble.left.and.bubble.right").font(.system(size: 36, weight: .light)).foregroundStyle(accent)
                         Text("A place for your conversation").font(.title3.weight(.semibold))
-                        Text("Start the server, then connect the Reachy conversation app.\nYour words and Reachy’s replies will appear here.")
+                        Text("Start the server and connect a Realtime client.\nYour messages and the assistant’s replies will appear here.")
                             .multilineTextAlignment(.center).font(.callout).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity).padding(.vertical, 80)
                 } else {
@@ -416,7 +422,8 @@ struct Speech2SpeechModelHosterApp: App {
             ContentView(model: model).onAppear {
                 delegate.model = model
                 // Prepare on first launch; listening still requires Start.
-                let home = ProcessInfo.processInfo.environment["REACHY_APP_HOME"] ?? (NSHomeDirectory() + "/Library/Application Support/Speech2SpeechModelHoster")
+                let environment = ProcessInfo.processInfo.environment
+                let home = environment["SPEECH_HOSTER_HOME"] ?? environment["REACHY_APP_HOME"] ?? (NSHomeDirectory() + "/Library/Application Support/Speech2SpeechModelHoster")
                 if !FileManager.default.fileExists(atPath: home + "/desktop-profile.yaml") {
                     model.start(prepareOnly: true)
                 }

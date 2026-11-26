@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import runpy
 import sys
 import threading
 import uuid
@@ -28,7 +27,7 @@ _event_lock = threading.Lock()
 
 def emit(kind, **values):
     with _event_lock:
-        print("REACHY_EVENT " + json.dumps({"kind": kind, **values}), flush=True)
+        print("SPEECH_EVENT " + json.dumps({"kind": kind, **values}), flush=True)
 
 
 def describe(raw):
@@ -99,7 +98,7 @@ def prepare_profile(destination):
     import yaml
     from huggingface_hub import hf_hub_download, snapshot_download
 
-    from reachy_local.runtime import DEFAULT_PROFILE
+    from speech_hoster.runtime import DEFAULT_PROFILE
 
     profile = yaml.safe_load(DEFAULT_PROFILE.read_text())
     for stage, key in (
@@ -140,7 +139,7 @@ def pin_silero():
 
 
 def main():
-    from reachy_local.runtime import require_server, runtime_environment
+    from speech_hoster.runtime import require_server, runtime_environment
 
     require_server()
     os.environ.update(runtime_environment("0.0.0.0" if "--lan" in sys.argv else "127.0.0.1", 8765))
@@ -149,13 +148,10 @@ def main():
     profile = Path("desktop-profile.yaml").resolve()
     prepare_profile(profile)
     pin_silero()
-    from speech_to_speech.api.openai_realtime import server
+    from speech_hoster.server import serve_profile
 
-    original = server.create_app
-    server.create_app = lambda **kwargs: Monitor(original(**kwargs))
     emit("status", text="Loading models")
-    sys.argv = ["speech-to-speech", "serve", "-f", str(profile)]
-    runpy.run_module("speech_to_speech.cli", run_name="__main__")
+    serve_profile(profile, monitor=Monitor)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Experiment check
 
-Run this with the Mac, robot, room, language, personality, and tool settings intended for the experiment. A successful server connection is the starting point.
+Run this with the Mac, client device, room, language, personality, and tool settings intended for the experiment. A successful server connection is the starting point.
 
 ## Record the configuration
 
@@ -8,7 +8,7 @@ Run this with the Mac, robot, room, language, personality, and tool settings int
 - Mac model, chip, memory, macOS version, and power source.
 - This repository's commit and the installed `speech-to-speech` version.
 - Pipeline configuration and selected model IDs; preserve model/cache revisions if exact reruns are needed.
-- Reachy Conversation App and robot software versions.
+- Client application and device software versions.
 - Conversation language, personality instructions, enabled tools, and memory settings.
 - Local or LAN connection, network, speaker volume, and microphone placement.
 
@@ -17,9 +17,9 @@ Package versions are locked by this repository. Model IDs alone do not freeze Hu
 ## Prepare
 
 - [ ] Install the environment and load all models while online.
-- [ ] Run the endpoint check with Reachy disconnected, then close the diagnostic client.
-- [ ] Connect the actual Reachy app to the local endpoint and complete a spoken exchange.
-- [ ] Restart the server and robot app to verify the saved connection settings.
+- [ ] Run the endpoint check with a free conversation slot, then close the diagnostic client.
+- [ ] Connect the intended client to the local endpoint and complete a spoken exchange.
+- [ ] Restart the server and client to verify the saved connection settings.
 - [ ] If offline operation is required, repeat a full conversation without internet access while retaining the local network.
 - [ ] Keep the Mac powered and awake for the session.
 
@@ -27,7 +27,7 @@ Package versions are locked by this repository. Model IDs alone do not freeze Hu
 
 Use 30–50 representative turns, including short replies, long questions, and the longest expected conversation history. Decide the acceptable response delay and failure rate for the study before collecting measurements.
 
-In Reachy's web UI, enable **Settings → Developer options → Show response latencies** to inspect server timing. Also measure the actual audible reply at the robot: server-generated audio timing excludes network, playback, and speaker delays.
+Record server timing and measure the first audible reply on the client. Network and playback delays contribute to the time the user experiences.
 
 Record for each turn:
 
@@ -46,9 +46,9 @@ Separate the first cold-start turn from warmed-up turns. Report median, 95th-per
 ## Exercise failure and interruption paths
 
 - [ ] Interrupt a long response and confirm that playback stops and the next utterance is handled correctly.
-- [ ] Speak during robot movement and with the planned background noise.
+- [ ] Speak with the planned background noise and microphone placement.
 - [ ] Test silence, very short utterances, and a longer pause within an utterance.
-- [ ] Trigger each robot tool required by the experiment and confirm physical execution.
+- [ ] Trigger each client tool required by the experiment and confirm its result.
 - [ ] Validate camera reasoning separately if the experiment needs it; it is not established by a speech-only check.
 - [ ] Run a full-length session and watch for worsening latency or memory pressure.
 - [ ] Restart after Mac sleep or a network disconnect and verify reconnection.

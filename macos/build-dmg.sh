@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 output=${1:-"$PWD/dist/Speech2SpeechModelHoster.dmg"}
-work=$(mktemp -d "${TMPDIR:-/tmp}/reachy-dmg.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/speech-dmg.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 
 BUILD_DIR="$work/build" ./macos/build.sh

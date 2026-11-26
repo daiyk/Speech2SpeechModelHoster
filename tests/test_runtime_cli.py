@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from reachy_local import cli, runtime
+from speech_hoster import cli, runtime
 
 
 def test_runtime_environment_preserves_explicit_cache_paths_and_parent_environment(
@@ -23,13 +23,13 @@ def test_runtime_environment_preserves_explicit_cache_paths_and_parent_environme
     monkeypatch.delenv("NLTK_DATA", raising=False)
     monkeypatch.delenv("HF_HUB_OFFLINE", raising=False)
     monkeypatch.delenv("TRANSFORMERS_OFFLINE", raising=False)
-    monkeypatch.delenv("REACHY_SPEECH_CACHE", raising=False)
+    monkeypatch.delenv("SPEECH_HOSTER_CACHE", raising=False)
     environment = runtime.runtime_environment("0.0.0.0", 9876, offline=True)
     assert environment["HF_HOME"] == "/existing/model/cache"
     assert environment["TORCH_HOME"] == str(tmp_path / ".cache" / "torch")
     assert environment["NLTK_DATA"] == str(tmp_path / ".cache" / "nltk")
-    assert environment["REACHY_SPEECH_HOST"] == "0.0.0.0"
-    assert environment["REACHY_SPEECH_PORT"] == "9876"
+    assert environment["SPEECH_HOSTER_HOST"] == "0.0.0.0"
+    assert environment["SPEECH_HOSTER_PORT"] == "9876"
     assert environment["HF_HUB_OFFLINE"] == environment["TRANSFORMERS_OFFLINE"] == "1"
     assert "HF_HUB_OFFLINE" not in runtime.os.environ
 
@@ -67,7 +67,7 @@ def test_serve_executes_fixed_python_module_with_literal_config_path(monkeypatch
             pipelines={"mac": {}},
         ),
     )
-    monkeypatch.setenv("REACHY_SPEECH_CACHE", str(tmp_path / "cache"))
+    monkeypatch.setenv("SPEECH_HOSTER_CACHE", str(tmp_path / "cache"))
     for name in ("HF_HOME", "TORCH_HOME", "NLTK_DATA"):
         monkeypatch.delenv(name, raising=False)
     calls = []
@@ -80,9 +80,7 @@ def test_serve_executes_fixed_python_module_with_literal_config_path(monkeypatch
     assert argv == [
         sys.executable,
         "-m",
-        "speech_to_speech.cli",
-        "serve",
-        "-f",
+        "speech_hoster.server",
         str(config.resolve()),
     ]
     assert environment["HF_HUB_OFFLINE"] == "1"
@@ -145,8 +143,8 @@ def test_literal_profile_cannot_silently_override_requested_listener(
     pytest.importorskip("speech_to_speech.config", reason="Requires the server extra")
     profile = tmp_path / "custom.yaml"
     original = runtime.DEFAULT_PROFILE.read_text()
-    profile.write_text(original.replace(f"{{env: REACHY_SPEECH_{field.upper()}}}", literal))
-    with pytest.raises(ValueError, match="REACHY_SPEECH_"):
+    profile.write_text(original.replace(f"{{env: SPEECH_HOSTER_{field.upper()}}}", literal))
+    with pytest.raises(ValueError, match="SPEECH_HOSTER_"):
         runtime.resolve_profile(profile, host, port)
 
 

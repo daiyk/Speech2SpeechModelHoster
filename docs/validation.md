@@ -1,4 +1,16 @@
-# Validation record — 2026-11-04
+# Validation record
+
+## Hugging Face client compatibility · 2026-11-26
+
+The server embedded in the locally built Mac app ran with cached weights. Both client checks used the installed upstream `speech-to-speech==1.1.0` package over loopback.
+
+- **Realtime.** The stock session request omitted the voice and audio format. Generated speech passed through VAD and transcription, and the SDK received a spoken reply. A function call, its client result, and the spoken continuation completed on the same connection. A separate stock session explicitly selected Vivian and 24 kHz PCM and received audio.
+- **HTTP speech.** The upstream `OpenAICompatibleTTSHandler` completed its warmup and decoded a subsequent utterance using its default Qwen model name and raw 24 kHz PCM. Separate runs exercised streaming PCM, WAV with language and style instructions, and 1.25× speed.
+- **Build.** The Mac app and installer built locally. The native model checks and 73 Python tests passed.
+
+These checks exercised the WebSocket and HTTP transports on one Mac.
+
+## Initial pipeline validation · 2026-11-04
 
 Environment: Apple M5 Max MacBook Pro, 64 GB unified memory, CPython 3.12.13,
 `speech-to-speech==1.1.0`, `openai==2.28.0`. The default Mac profile was used.
@@ -10,7 +22,7 @@ Environment: Apple M5 Max MacBook Pro, 64 GB unified memory, CPython 3.12.13,
   malformed/error responses, bounded deadlines, PCM negotiation, WAV handling,
   upstream YAML resolution, and launcher argument/environment behavior.
 - Ruff lint and formatting checks; shell script syntax checks.
-- Real model startup and Reachy-style Realtime session negotiation.
+- Real model startup and Realtime session negotiation.
 - Offline-mode restart from the final repository location with cached models, followed
   by a successful `scripts/validate_pipeline.py` audio and tool round trip. The Mac
   remained network-connected; this tested offline flags and cached resources, not
@@ -19,12 +31,11 @@ Environment: Apple M5 Max MacBook Pro, 64 GB unified memory, CPython 3.12.13,
 - Generated speech streamed back as microphone-format audio through VAD and Parakeet;
   a nonempty transcript and a new spoken reply were received.
 - A `get_test_value` function call, client-side simulated result, and spoken continuation.
-  This used the same OpenAI Python SDK version as the verified Reachy app.
 
 One warmed text-to-speech request received its first audio after 0.784 seconds.
 The final-location smoke test received its first source audio after 0.629 seconds.
 These are individual smoke-test measurements on this Mac. It excludes input speech
-recognition and robot playback, and is not an M5 Pro or experiment latency benchmark.
+recognition and client playback, and is not an M5 Pro or experiment latency benchmark.
 
 ## Model snapshots observed
 
@@ -41,8 +52,7 @@ cache or use fixed local snapshot paths when a study requires identical weights.
 
 ## Remaining physical validation
 
-No physical Reachy, LAN/firewall path, microphone echo, interruption behavior,
-camera reasoning, or sustained participant session was tested. The Qwen3-ASR
+LAN connectivity, microphone echo, interruptions, and sustained sessions on a physical client were outside these checks. The Qwen3-ASR
 alternative passed configuration validation but was not loaded for inference.
 Use the [experiment checklist](experiment-checklist.md) before participant sessions.
 

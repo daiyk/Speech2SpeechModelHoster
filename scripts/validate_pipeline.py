@@ -15,8 +15,12 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from openai import AsyncOpenAI
+from speech_to_speech.api.openai_realtime.audio_client import (
+    RealtimeAudioClientConfig,
+    build_session_update,
+)
 
-from reachy_local.probe import DEFAULT_URL, probe, reachy_session, validate_url
+from speech_hoster.probe import DEFAULT_URL, probe, validate_url
 
 
 class EndpointError(RuntimeError):
@@ -69,7 +73,7 @@ async def finish_response(conn, *, require_transcript=False, require_tool=False)
 
 
 async def exercise(conn, audio: bytes) -> dict:
-    await conn.session.update(session=reachy_session())
+    await conn.send(build_session_update(RealtimeAudioClientConfig()))
     await wait_event(conn, "session.updated")
     # Append two seconds of silence to let server VAD end the synthetic utterance.
     audio += bytes(16000 * 2 * 2)
@@ -80,7 +84,7 @@ async def exercise(conn, audio: bytes) -> dict:
         await asyncio.sleep(0.032)
     chars, audio_bytes, _ = await finish_response(conn, require_transcript=True)
     result = {"audio_roundtrip": {"transcript_chars": chars, "response_audio_bytes": audio_bytes}}
-    config = reachy_session()
+    config = build_session_update(RealtimeAudioClientConfig())["session"]
     config["instructions"] = (
         "Call get_test_value exactly once when asked for the test value. "
         "After receiving its result, say the returned value in one short sentence."
@@ -104,7 +108,7 @@ async def exercise(conn, audio: bytes) -> dict:
     )
     await conn.response.create()
     _, _, call = await finish_response(conn, require_tool=True)
-    # This mock tool returns a constant; it performs no robot action.
+    # Return the result through the same conversation, correlated by call ID.
     await conn.conversation.item.create(
         item={
             "type": "function_call_output",
@@ -124,11 +128,11 @@ async def validate(url: str, timeout: float) -> dict:
     ws_base = parts._replace(path="/v1").geturl()
     http_base = parts._replace(scheme="https" if parts.scheme == "wss" else "http", path="/v1")
     async with asyncio.timeout(timeout):
-        with tempfile.TemporaryDirectory(prefix="reachy-pipeline-check-") as directory:
+        with tempfile.TemporaryDirectory(prefix="speech-pipeline-check-") as directory:
             source = Path(directory) / "source.wav"
             generated = await probe(
                 url,
-                speak="Say exactly: Hello Reachy, please tell me a short fun fact.",
+                speak="Say exactly: Please tell me a short fun fact.",
                 wav_path=source,
                 timeout=timeout,
             )
@@ -149,7 +153,7 @@ async def validate(url: str, timeout: float) -> dict:
             ) as client:
                 drain_deadline = time.monotonic() + 10
                 while True:
-                    async with client.realtime.connect() as conn:
+                    async with client.realtime.connect(model="local") as conn:
                         try:
                             remaining = max(0.01, drain_deadline - time.monotonic())
                             async with asyncio.timeout(remaining):

@@ -7,8 +7,14 @@ import os
 import sys
 from pathlib import Path
 
-from reachy_local.probe import DEFAULT_URL, probe, validate_url
-from reachy_local.runtime import DEFAULT_PROFILE, doctor, require_server, runtime_environment, serve
+from speech_hoster.probe import DEFAULT_URL, probe, validate_url
+from speech_hoster.runtime import (
+    DEFAULT_PROFILE,
+    doctor,
+    require_server,
+    runtime_environment,
+    serve,
+)
 
 
 def port_number(value: str) -> int:
@@ -19,7 +25,7 @@ def port_number(value: str) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Local Hugging Face speech server for Reachy Mini")
+    parser = argparse.ArgumentParser(description="Local Hugging Face speech server")
     commands = parser.add_subparsers(dest="command", required=True)
     for command in ("serve", "doctor"):
         child = commands.add_parser(command)
@@ -31,14 +37,16 @@ def build_parser() -> argparse.ArgumentParser:
         if command == "serve":
             child.add_argument("--offline", action="store_true", help="Use cached HF weights")
     check = commands.add_parser(
-        "check", help="Check a running server using Reachy's session format"
+        "check", help="Check a running server using the Hugging Face Realtime protocol"
     )
     check.add_argument("--url", default=DEFAULT_URL)
     check.add_argument("--speak", help="Also test a text-triggered spoken reply; no microphone")
+    check.add_argument("--voice", help="Voice ID from GET /v1/audio/voices")
     check.add_argument("--wav", type=Path, help="Save test audio as a new 16 kHz PCM16 WAV")
     check.add_argument("--timeout", type=float, default=120)
     talk = commands.add_parser("talk", help="Use the Mac microphone/speakers with a running server")
     talk.add_argument("--url", default=DEFAULT_URL)
+    talk.add_argument("--voice", help="Voice ID from GET /v1/audio/voices")
     talk.add_argument("--echo-cancellation", action="store_true")
     return parser
 
@@ -59,7 +67,13 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 json.dumps(
                     asyncio.run(
-                        probe(args.url, speak=args.speak, wav_path=args.wav, timeout=args.timeout)
+                        probe(
+                            args.url,
+                            speak=args.speak,
+                            wav_path=args.wav,
+                            timeout=args.timeout,
+                            voice=args.voice,
+                        )
                     ),
                     indent=2,
                 )
@@ -68,6 +82,8 @@ def main(argv: list[str] | None = None) -> int:
             require_server()
             validate_url(args.url)
             command = [sys.executable, "-m", "speech_to_speech.cli", "talk", "--url", args.url]
+            if args.voice:
+                command.extend(["--voice", args.voice])
             if args.echo_cancellation:
                 command.append("--echo-cancellation")
             os.execve(sys.executable, command, runtime_environment("127.0.0.1", 8765))

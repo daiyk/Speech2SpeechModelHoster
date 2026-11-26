@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from reachy_local.desktop import PINS, Monitor, describe, prepare_profile
+from speech_hoster.desktop import PINS, Monitor, describe, prepare_profile
 
 
 def test_audio_payloads_are_never_logged():
@@ -22,7 +22,7 @@ def test_audio_payloads_are_never_logged():
 @pytest.mark.asyncio
 async def test_monitor_preserves_frames_and_removes_disconnected_client(monkeypatch):
     events, sent = [], []
-    monkeypatch.setattr("reachy_local.desktop.emit", lambda kind, **kw: events.append((kind, kw)))
+    monkeypatch.setattr("speech_hoster.desktop.emit", lambda kind, **kw: events.append((kind, kw)))
     incoming = {"type": "websocket.receive", "text": '{"type":"response.create"}'}
 
     async def receive():
@@ -49,7 +49,7 @@ async def test_monitor_preserves_frames_and_removes_disconnected_client(monkeypa
 @pytest.mark.asyncio
 async def test_rejected_connection_is_not_counted(monkeypatch):
     events = []
-    monkeypatch.setattr("reachy_local.desktop.emit", lambda *a, **kw: events.append(a))
+    monkeypatch.setattr("speech_hoster.desktop.emit", lambda *a, **kw: events.append(a))
 
     async def app(scope, receive, send):
         await send({"type": "websocket.close", "code": 1008})
@@ -82,5 +82,5 @@ def test_profile_downloads_exact_revisions_and_uses_local_paths(monkeypatch, tmp
 
     resolve_config(
         load_config(profile),
-        environ={"REACHY_SPEECH_HOST": "127.0.0.1", "REACHY_SPEECH_PORT": "8765"},
+        environ={"SPEECH_HOSTER_HOST": "127.0.0.1", "SPEECH_HOSTER_PORT": "8765"},
     )

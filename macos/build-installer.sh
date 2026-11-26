@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 ./macos/build.sh
 app="$PWD/dist/Speech2SpeechModelHoster.app"
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$app/Contents/Info.plist")
-work=$(mktemp -d "${TMPDIR:-/tmp}/reachy-installer.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/speech-installer.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/root/Applications" "$work/resources"
 ditto "$app" "$work/root/Applications/Speech2SpeechModelHoster.app"
@@ -18,7 +18,7 @@ pkgbuild --root "$work/root" --component-plist "$work/components.plist" \
 cat > "$work/resources/welcome.html" <<'HTML'
 <html><body style="font-family:-apple-system;font-size:14px;color:#222">
 <h1>Speech2SpeechModelHoster</h1>
-<p>Speech2SpeechModelHoster runs the speech models on this Mac for the Reachy Mini Conversation App.</p>
+<p>Speech2SpeechModelHoster runs the speech models on this Mac for Realtime clients.</p>
 <p>This installer places Speech2SpeechModelHoster in your Applications folder.</p>
 <ul><li>Apple Silicon Mac, macOS 14 or later</li>
 <li>At least 16 GB memory recommended</li>
@@ -33,7 +33,7 @@ cat > "$work/resources/conclusion.html" <<'HTML'
 <h1>Ready for first launch</h1>
 <p>Open <b>Applications → Speech2SpeechModelHoster</b>.</p>
 <p>Wait for automatic setup, then select <b>Start server</b>. When the server
-is online, copy the connection URL into the Reachy conversation app.</p>
+is online, copy the connection URL into your Realtime client.</p>
 <p>Your runtime and model cache are kept in your user Library's Application
 Support folder. Updating the app preserves these files.</p>
 </body></html>

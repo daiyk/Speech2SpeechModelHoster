@@ -27,8 +27,8 @@ if [[ -n ${SPARKLE_DIR:-} ]]; then
   swift_flags+=(-D SPARKLE_UPDATES -F "$SPARKLE_DIR" -framework Sparkle
     -Xlinker -rpath -Xlinker '@executable_path/../Frameworks')
 fi
-xcrun swiftc -parse-as-library macos/Speech2SpeechModelHoster.swift -o "$app/Contents/MacOS/Speech2SpeechModelHoster" \
-  -target arm64-apple-macos14.0 -module-cache-path "${TMPDIR:-/tmp}/reachy-swift-cache" "${swift_flags[@]}"
+xcrun swiftc -parse-as-library macos/Voices.swift macos/Speech2SpeechModelHoster.swift -o "$app/Contents/MacOS/Speech2SpeechModelHoster" \
+  -target arm64-apple-macos14.0 -module-cache-path "${TMPDIR:-/tmp}/speech-swift-cache" "${swift_flags[@]}"
 iconset="$out/AppIcon.iconset"
 mkdir -p "$iconset"
 for size in 16 32 128 256 512; do
@@ -40,7 +40,7 @@ iconutil -c icns "$iconset" -o "$app/Contents/Resources/AppIcon.icns"
 cp macos/Assets/AppIcon.png "$app/Contents/Resources/AppIcon.png"
 cp macos/bootstrap.sh "$app/Contents/Resources/bootstrap.sh"
 cp pyproject.toml uv.lock .python-version "$app/Contents/Resources/project/"
-rsync -a --delete --exclude '__pycache__' src/reachy_local "$app/Contents/Resources/project/src/"
+rsync -a --delete --exclude '__pycache__' --exclude '*.egg-info' src/ "$app/Contents/Resources/project/src/"
 plist="$app/Contents/Info.plist"
 cat > "$plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

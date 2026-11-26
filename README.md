@@ -1,21 +1,15 @@
 # Speech2SpeechModelHoster
 
-Host speech recognition, language generation, and speech synthesis on an Apple Silicon Mac. The Reachy Mini Conversation App connects to the Mac over a Realtime WebSocket, sends microphone audio, and plays the spoken response.
+Host Hugging Face’s speech-to-speech pipeline on an Apple Silicon Mac. Microphone clients can stream audio over a Realtime WebSocket and receive spoken replies. Applications can also send text over HTTP to synthesize speech in a selected voice.
 
-Start the server from the macOS app or from the terminal. Both use **`speech-to-speech==1.1.0`** for audio streaming, interruptions, conversation state, and tool calls.
+The macOS app and terminal launcher use the same pinned `speech-to-speech==1.1.0` server for audio streaming, interruptions, conversation state, and tool calls. [Hugging Face speech-to-speech](https://github.com/huggingface/speech-to-speech)
 
 ```text
-Reachy Mini Conversation App
-  microphone / speaker / robot tools
-          │ Realtime WebSocket
+Realtime client (microphone, speaker, optional tools)
+          │ ws://<mac-address>:8765/v1/realtime
           ▼
 Mac: Silero VAD → Parakeet TDT → Qwen3.5-4B (MLX, 4-bit) → Qwen3-TTS
-          ws://<mac-address>:8765/v1/realtime
 ```
-
-The pipeline comes from [Hugging Face speech-to-speech](https://github.com/huggingface/speech-to-speech). The [official Reachy app supports connecting directly to this server](https://github.com/pollen-robotics/reachy_mini_conversation_app#hugging-face-connection-modes).
-
-The connection settings were checked against Reachy Conversation App 1.2.0, [commit `e901925`](https://github.com/pollen-robotics/reachy_mini_conversation_app/tree/e90192559149d6281d782c1c4aed39bb7d84bdef), on 2026-11-04. Physical robot validation is a separate step.
 
 ## macOS app
 
@@ -52,12 +46,12 @@ Launchers keep model/resource caches in this repository's ignored `.cache/` dire
 
 ## Start the server
 
-Choose the launcher according to **where the Conversation App runs**:
+Choose the launcher according to **where the client runs**:
 
-| Conversation App location | Double-click | Endpoint entered in Reachy |
+| Client location | Double-click | Client endpoint |
 |---|---|---|
-| On the same Mac, including a USB-connected robot | `Start Local Server.command` | `ws://127.0.0.1:8765/v1/realtime` |
-| On a Reachy Mini Wireless or another computer | `Start LAN Server.command` | `ws://<mac-lan-ip>:8765/v1/realtime` |
+| On the same Mac | `Start Local Server.command` | `ws://127.0.0.1:8765/v1/realtime` |
+| On another device on the LAN | `Start LAN Server.command` | `ws://<mac-lan-ip>:8765/v1/realtime` |
 
 Terminal equivalents:
 
@@ -66,77 +60,112 @@ Terminal equivalents:
 ./scripts/serve.sh --lan
 ```
 
-Wait for model loading and the server startup message before connecting. Keep the terminal open; press **Ctrl+C** to stop the server. One configured pipeline serves one connected conversation at a time, so disconnect diagnostic clients before connecting Reachy.
+Wait for model loading and the server startup message before connecting. Keep the terminal open; press **Ctrl+C** to stop the server. One configured pipeline serves one connected conversation at a time, so disconnect diagnostic clients before connecting another client.
 
-The LAN launcher listens on `0.0.0.0`; clients must use the Mac's actual LAN address, never `0.0.0.0`. Find it in **macOS System Settings → Wi-Fi → Details → TCP/IP**. Use the same network for the Mac and robot, and allow the server through the macOS firewall if prompted. This local endpoint has no authentication, so keep it on a trusted network.
+The LAN launcher listens on `0.0.0.0`; clients must use the Mac's actual LAN address, never `0.0.0.0`. Find it in **macOS System Settings → Wi-Fi → Details → TCP/IP**. Use the same network for the Mac and client, and allow the server through the macOS firewall if prompted. This local endpoint has no authentication, so keep it on a trusted network.
 
-## Point Reachy at the Mac
+## Speak supplied text directly
 
-In the Conversation App, open **Settings → Connection**, choose the local server, and enter:
+With the server running, send a short message to `POST /v1/audio/speech`. Qwen3-TTS speaks the supplied text without a conversation or an LLM call. By default the caller receives a mono 16 kHz PCM16 WAV and controls playback.
 
-- `127.0.0.1:8765` if the Conversation App runs on this Mac.
-- `<mac-lan-ip>:8765` if it runs on the robot or a different machine.
-
-For a configuration-file installation, set these variables **in the Conversation App's environment**:
-
-```dotenv
-HF_REALTIME_CONNECTION_MODE=local
-HF_REALTIME_WS_URL=ws://127.0.0.1:8765/v1/realtime
+```bash
+curl --fail --silent --show-error http://127.0.0.1:8765/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"Welcome. The session is ready to begin."}' \
+  -o speech.wav
+afplay speech.wav
 ```
 
-Replace `127.0.0.1` with the Mac's LAN IP when needed. No Hugging Face token or OpenAI key is required by this local backend.
+Only `input` is required (1–500 characters, including at least one non-whitespace character). The voice defaults to the server’s selected voice (initially Aiden). To select a preset or a saved voice, set `voice` to its catalogue ID. Existing preset names such as `Vivian` are case-insensitive.
 
-**Reachy's saved UI settings take precedence over environment variables.** If it keeps using the hosted server, change the connection in the app's Settings view. Restart the conversation after switching endpoints.
+Hugging Face’s HTTP TTS backend (`--tts openai`) can point its `--openai_tts_base_url` to `http://127.0.0.1:8765/v1` and use its standard Qwen settings. The endpoint accepts the original `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` model ID and the local `qwen3-tts` alias. With `response_format="pcm"`, it returns raw **24 kHz mono signed 16-bit little-endian PCM**. The adapter’s `stream_format="audio"` and optional `stream=true` work with PCM. WAV remains available for file playback.
+
+The terminal server and builds of the macOS app from this checkout expose this route on the same host and port as Realtime. Both load the full pipeline at startup. Direct requests can be made while a Realtime client is connected. Each request chooses its own voice. In LAN mode, replace `127.0.0.1` with the Mac's LAN IP.
+
+## Create and use voices
+
+Start the server in the Mac app and open **Voices**.
+
+- **Clone voice** accepts up to 30 seconds of M4A (including Voice Memos), WAV, AIFF, FLAC, or MP3 audio. Name the voice and check the words in the transcript. With the default Parakeet profile, the app transcribes the recording for you.
+- **Design voice** takes a description and a reference sentence. Generate and replay takes until you find one you like. **Save voice** keeps that take and its transcript. When speaking new text, the Base model uses the saved reference. Delivery can vary slightly between utterances.
+- **Play voice preview** speaks “Hello! It is nice to meet you.” You can also enter your own sentence. **Export audio** saves the selected library voice’s current preview as a WAV. **Export voice** saves a portable `.s2svoice` file containing the reference audio, transcript, name, type, and model details. **Import** restores the voice with the same ID on another Mac running this server. Importing the same package again is safe.
+- **Use as server default** selects the voice for clients that omit a voice. Clients that specify a voice take precedence. Saved voices and the default persist across restarts in `~/Library/Application Support/Speech2SpeechModelHoster/voices` (or under `SPEECH_HOSTER_HOME`).
+
+The first design downloads the pinned Qwen3-TTS 1.7B VoiceDesign model. Previewing or speaking a cloned or designed voice downloads the 1.7B Base model. Both are 6-bit MLX models, cached locally. Voice design and cloning share one additional model slot in memory.
+
+**Client discovery and selection**
+
+`GET /v1/audio/voices` returns `types`, `default_voice`, and a `voices` array. Each entry has an `id`, display `name`, and `type` of `preset`, `cloned`, or `designed`. Use the returned ID even when two voices share a name.
+
+```bash
+curl http://127.0.0.1:8765/v1/audio/voices
+```
+
+For direct speech, send the ID in the `voice` field of `POST /v1/audio/speech`. For Realtime, send a `session.update` before requesting speech, replacing `<voice-id>` with an ID from the catalogue.
+
+```json
+{"type":"session.update","session":{"type":"realtime","audio":{"output":{"voice":"<voice-id>"}}}}
+```
+
+The bundled CLI also accepts `speech-hoster talk --voice <voice-id>` and `speech-hoster check --voice <voice-id> --speak "Say hello"`. Clients on the LAN can list voices and speak with them. Creating, importing, and exporting voice references is available on the host Mac.
+
+## Connect a Hugging Face client
+
+The original microphone client can connect directly to the running server:
+
+```sh
+.venv/bin/speech-to-speech talk --url ws://127.0.0.1:8765/v1/realtime
+```
+
+For an SDK integration, point the HTTP base at `http://<host>:8765/v1` and the WebSocket base at `ws://<host>:8765/v1`, then connect with `model="local"`. The SDK accepts a placeholder API key for this local endpoint. See the [client environment example](client.env.example). A client may omit the voice and audio format just as the upstream client does. The upstream default is 16 kHz mono PCM for Realtime audio. [Hugging Face Realtime example](https://github.com/huggingface/speech-to-speech#realtime-api)
 
 ## Check the installation and connection
 
 From this repository:
 
 ```bash
-.venv/bin/reachy-local doctor
-.venv/bin/reachy-local check --url ws://127.0.0.1:8765/v1/realtime
+.venv/bin/speech-hoster doctor
+.venv/bin/speech-hoster check --url ws://127.0.0.1:8765/v1/realtime
 ```
 
-Run the connection check while the server is running and Reachy is disconnected. A successful handshake confirms that the endpoint accepts a Reachy-style session; it does not measure recognition quality or prove that the robot's microphone and speaker work.
+Run the connection check while the server is running with a free conversation slot. A successful handshake confirms that the server accepts the upstream session request.
 
 To exercise language generation and speech synthesis without a microphone:
 
 ```bash
-.venv/bin/reachy-local check \
+.venv/bin/speech-hoster check \
   --url ws://127.0.0.1:8765/v1/realtime \
   --speak "Say hello in one short sentence." \
-  --wav /tmp/reachy-local-test.wav \
+  --wav /tmp/speech-hoster-test.wav \
   --timeout 120
 ```
 
-The optional WAV contains the returned mono, 16 kHz PCM16 audio. Choose a new output filename for each run; existing recordings are not overwritten. This check reports time to first received audio after a text request. It does **not** include speech recognition, voice activity detection, or the robot's playback delay.
+The optional WAV contains the returned mono, 16 kHz PCM16 audio. Choose a new output filename for each run; existing recordings are not overwritten. This check reports time to first received audio after a text request. It does **not** include speech recognition, voice activity detection, or client playback delay.
 
 You can also connect the upstream microphone/speaker client from the Mac:
 
 ```bash
-.venv/bin/reachy-local talk
+.venv/bin/speech-hoster talk
 ```
 
-Use headphones for this check. macOS may request microphone permission. Quit this client before connecting Reachy.
+Use headphones for this check. macOS may request microphone permission. Quit this client before connecting another client.
 
-Optional full pipeline check, with the server running and Reachy disconnected:
+Optional full pipeline check, with the server running and a free conversation slot:
 
 ```bash
 .venv/bin/python scripts/validate_pipeline.py --timeout 180
 ```
 
-This generates a temporary spoken sample, streams it back through recognition and response generation, and completes a mock function-call/result cycle using Reachy's OpenAI SDK. It prints a JSON report without transcripts. It uses no microphone and controls no robot; physical audio, movements, and conversational latency still need validation on Reachy. Use `--url` to test another endpoint.
+This generates a temporary spoken sample, streams it through recognition and response generation, and completes a function call with a simulated client result using the OpenAI SDK. It prints a JSON report without transcripts. Use `--url` to test another endpoint.
 
 ## Models and configuration
 
-The default profile is [`src/reachy_local/profiles/mac.yaml`](src/reachy_local/profiles/mac.yaml). It uses the upstream Apple Silicon preset and an explicit `mlx-community/Qwen3.5-4B-4bit` language model. Copy the profile to customize it, then run `./scripts/serve.sh --config /path/to/profile.yaml`. Keep the `REACHY_SPEECH_HOST` and `REACHY_SPEECH_PORT` environment references in `runtime.server` so `--lan`, `--host`, and `--port` work. Conflicting literal listener settings are rejected. See the [upstream YAML guide](https://github.com/huggingface/speech-to-speech/blob/main/docs/configuration.md) for stage settings.
+The default profile is [`src/speech_hoster/profiles/mac.yaml`](src/speech_hoster/profiles/mac.yaml). It uses the upstream Apple Silicon preset and an explicit `mlx-community/Qwen3.5-4B-4bit` language model. Copy the profile to customize it, then run `./scripts/serve.sh --config /path/to/profile.yaml`. Keep the `SPEECH_HOSTER_HOST` and `SPEECH_HOSTER_PORT` environment references in `runtime.server` so `--lan`, `--host`, and `--port` work. Conflicting literal listener settings are rejected. See the [upstream YAML guide](https://github.com/huggingface/speech-to-speech/blob/main/docs/configuration.md) for stage settings.
 
-This uses the same backend project as Reachy's hosted service. The local default follows the official speech-to-speech Mac setup. [Reachy's configuration identifies Qwen3-ASR as its deployed recognizer](https://github.com/pollen-robotics/reachy_mini_conversation_app/blob/e90192559149d6281d782c1c4aed39bb7d84bdef/src/reachy_mini_conversation_app/config.py#L52), whereas this profile uses Parakeet. Hosted model choices and tuning can change independently; this local profile does not promise identical answers or voices.
-
-Language coverage depends on both recognition and synthesis. In particular, the default Parakeet recognizer covers European languages. The alternative [`mac-qwen-asr.yaml`](src/reachy_local/profiles/mac-qwen-asr.yaml) profile uses Qwen3-ASR for broader language coverage, including CJK; validate recognition quality and latency for the selected language before use:
+Language coverage depends on both recognition and synthesis. In particular, the default Parakeet recognizer covers European languages. The alternative [`mac-qwen-asr.yaml`](src/speech_hoster/profiles/mac-qwen-asr.yaml) profile uses Qwen3-ASR for broader language coverage, including CJK; validate recognition quality and latency for the selected language before use:
 
 ```bash
-./scripts/serve.sh --config src/reachy_local/profiles/mac-qwen-asr.yaml
+./scripts/serve.sh --config src/speech_hoster/profiles/mac-qwen-asr.yaml
 ```
 
 The default profile is intended for speech conversation. Camera reasoning and additional tool integrations need their own validation and may require another model/backend.
@@ -147,7 +176,7 @@ After all resources have been downloaded and a complete conversation has succeed
 ./scripts/serve.sh --offline
 ```
 
-Keep Wi-Fi enabled if the robot connects over the LAN. Offline mode disables Hugging Face Hub requests; any separately enabled internet tools still require their own connections.
+Keep Wi-Fi enabled if a client connects over the LAN. Offline mode disables Hugging Face Hub requests; any separately enabled internet tools still require their own connections.
 
 ## Verification
 
@@ -155,18 +184,17 @@ See the [validation record](docs/validation.md) for the completed automated and 
 
 ## Before an experiment
 
-Use the [experiment checklist](docs/experiment-checklist.md) on the actual Mac and robot. Measure end-of-speech to audible reply, including slow turns and interruptions. Protocol compatibility alone is not an experimental readiness result.
+Use the [experiment checklist](docs/experiment-checklist.md) on the intended server and client devices. Measure end-of-speech to audible reply, including slow turns and interruptions. Protocol compatibility alone is not an experimental readiness result.
 
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
 | Connection refused | Start the server, wait for models to load, and check the address and port. |
-| Works on the Mac but not from Reachy Wireless | Use the LAN launcher and the Mac's LAN IP; check firewall access and Wi-Fi client isolation. |
-| Reachy still uses the hosted service | Update its saved Connection setting; environment variables do not override saved UI choices. |
+| Works on the Mac but not from a LAN client | Use the LAN launcher and the Mac's LAN IP; check firewall access and Wi-Fi client isolation. |
 | Connection closes or reports no available pipeline | Stop other clients; the default profile has one conversation slot. |
 | First start appears slow | Read the terminal output for model download/loading progress. Later starts use cached models. |
 | Offline startup fails | Complete an online startup and conversation first so all selected model resources are cached. |
-| Robot misunderstands speech or interrupts itself | Check the selected language, background noise, speaker volume, and Reachy's VAD/barge-in settings. |
+| Recognition misses speech or playback triggers interruptions | Check the selected language, background noise, speaker volume, and the client’s turn-detection settings. |
 
 The server runs in the foreground so its diagnostics remain visible. Do not change model versions or configuration during a study without recording and retesting the change.

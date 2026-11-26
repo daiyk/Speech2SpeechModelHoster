@@ -14,7 +14,7 @@ import pytest
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
-from reachy_local.probe import ProbeError, probe, validate_url
+from speech_hoster.probe import ProbeError, probe, validate_url
 
 
 def session_audio(rate=None):
@@ -45,7 +45,7 @@ async def configure(ws, received, *, audio=None):
 
 
 @pytest.mark.parametrize("rate", [None, 16000])
-async def test_handshake_uses_reachy_native_audio_and_server_vad(rate):
+async def test_handshake_uses_native_audio_and_server_vad(rate):
     received = []
 
     async def handler(ws):
@@ -60,23 +60,31 @@ async def test_handshake_uses_reachy_native_audio_and_server_vad(rate):
     assert request["type"] == "session.update"
     session = request["session"]
     assert session["type"] == "realtime"
-    assert session["audio"]["input"] == {
-        "format": {"type": "audio/pcm", "rate": None},
-        "transcription": {"model": "gpt-4o-transcribe", "language": "auto"},
-        "turn_detection": {"type": "server_vad", "interrupt_response": True},
-    }
-    assert session["audio"]["output"] == {
-        "format": {"type": "audio/pcm", "rate": None},
-        "voice": "Aiden",
-    }
-    assert session["tools"] == []
+    from speech_to_speech.api.openai_realtime.audio_client import (
+        RealtimeAudioClientConfig,
+        build_session_update,
+    )
+
+    assert request == build_session_update(RealtimeAudioClientConfig())
+
+
+async def test_native_format_omission_and_explicit_voice():
+    received = []
+
+    async def handler(ws):
+        await configure(ws, received, audio={"input": {}, "output": {}})
+        await ws.wait_closed()
+
+    async with endpoint(handler) as url:
+        await probe(url, voice="Vivian", timeout=2)
+    assert received[0]["session"]["audio"]["output"] == {"voice": "Vivian"}
 
 
 @pytest.mark.parametrize("direction", ["input", "output"])
 @pytest.mark.parametrize(
     "bad_format", [{}, {"type": "audio/pcm"}, {"type": "audio/pcm", "rate": 24000}]
 )
-async def test_rejects_audio_that_reachy_would_play_at_the_wrong_rate(direction, bad_format):
+async def test_rejects_incompatible_audio_for_wav_recording(direction, bad_format):
     audio = session_audio()
     audio[direction]["format"] = bad_format
 

@@ -1,4 +1,4 @@
-"""Exercise the same GA Realtime session contract used by Reachy's HF client."""
+"""Check the Hugging Face server through its GA Realtime WebSocket."""
 
 from __future__ import annotations
 
@@ -28,25 +28,20 @@ def validate_url(url: str) -> str:
     return url
 
 
-def reachy_session() -> dict:
+def realtime_session(voice: str | None = None) -> dict:
+    # The upstream talk client selects native 16 kHz PCM by omitting format.
     return {
         "type": "realtime",
-        "instructions": "You are Reachy Mini. Give a short spoken answer in one sentence.",
+        "extensions": ["speech_to_speech.input_audio_transcription.snapshot"],
         "audio": {
-            "input": {
-                "format": {"type": "audio/pcm", "rate": None},
-                "transcription": {"model": "gpt-4o-transcribe", "language": "auto"},
-                "turn_detection": {"type": "server_vad", "interrupt_response": True},
-            },
-            "output": {"format": {"type": "audio/pcm", "rate": None}, "voice": "Aiden"},
+            "input": {"turn_detection": {"type": "server_vad", "interrupt_response": True}},
+            "output": {"voice": voice} if voice else {},
         },
-        "tools": [],
-        "tool_choice": "auto",
     }
 
 
 class ProbeError(RuntimeError):
-    """The endpoint failed a required part of the Reachy contract."""
+    """The endpoint failed a Realtime protocol check."""
 
 
 async def _receive(ws) -> dict:
@@ -71,6 +66,7 @@ async def probe(
     url: str = DEFAULT_URL,
     *,
     speak: str | None = None,
+    voice: str | None = None,
     wav_path: Path | None = None,
     timeout: float = 120,
 ) -> dict:
@@ -88,13 +84,19 @@ async def probe(
     async with asyncio.timeout(timeout):
         async with connect(url, proxy=None, open_timeout=min(timeout, 15), max_size=8 << 20) as ws:
             await _until(ws, "session.created")
-            await ws.send(json.dumps({"type": "session.update", "session": reachy_session()}))
+            await ws.send(
+                json.dumps({"type": "session.update", "session": realtime_session(voice)})
+            )
             updated = await _until(ws, "session.updated")
             audio = updated.get("session", {}).get("audio", {})
             for direction in ("input", "output"):
-                audio_format = audio.get(direction, {}).get("format", {})
+                settings = audio.get(direction)
+                if isinstance(settings, dict) and settings.get("format") is None:
+                    continue
+                audio_format = settings.get("format") if isinstance(settings, dict) else None
                 if (
-                    audio_format.get("type") != "audio/pcm"
+                    not isinstance(audio_format, dict)
+                    or audio_format.get("type") != "audio/pcm"
                     or "rate" not in audio_format
                     or audio_format["rate"] not in (None, SAMPLE_RATE)
                 ):

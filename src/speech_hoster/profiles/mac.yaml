@@ -3,8 +3,8 @@ schema_version: 1
 runtime:
   log_transcripts: false
   server:
-    host: {env: REACHY_SPEECH_HOST}
-    port: {env: REACHY_SPEECH_PORT}
+    host: {env: SPEECH_HOSTER_HOST}
+    port: {env: SPEECH_HOSTER_PORT}
 
 blocks:
   vad: {kind: vad, backend: silero}
